@@ -46,11 +46,12 @@
       user-select: text;
     }
     /* Dynamic viewport container styling and safe area support */
-    .app-viewport {
-      height: 100vh;
-      height: 100dvh;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
+.app-viewport {
+  height: 100vh;
+  height: 100dvh;
+  padding-top: max(1.5rem, env(safe-area-inset-top, 28px));
+  padding-bottom: max(2rem, env(safe-area-inset-bottom, 32px));
+}
     /* Hide number input spinners for clean scoreboard typography */
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { 
