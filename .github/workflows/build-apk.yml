@@ -33,13 +33,29 @@ jobs:
           npx cap init "Sideline Reporter" "com.rocky.sidelinereporter" --web-dir www
           npx cap add android
 
+      - name: Fix Kotlin Stdlib Duplicate Classes
+        run: |
+          cat << 'EOF' >> android/app/build.gradle
+
+          configurations.all {
+              resolutionStrategy {
+                  eachDependency { DependencyResolveDetails details ->
+                      if (details.requested.group == 'org.jetbrains.kotlin' && 
+                          (details.requested.name == 'kotlin-stdlib-jdk7' || details.requested.name == 'kotlin-stdlib-jdk8')) {
+                          details.useTarget("org.jetbrains.kotlin:kotlin-stdlib:${details.requested.version}")
+                      }
+                  }
+              }
+          }
+          EOF
+
       - name: Build Debug APK with Gradle
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
         run: |
           cd android
           chmod +x ./gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
