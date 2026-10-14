@@ -30,8 +30,44 @@ jobs:
           cp index.html www/index.html
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "Sideline Reporter" "com.rocky.sidelinereporter" --web-dir www
+          npx cap init "Rocky Sideline" "com.rocky.sidelinereporter" --web-dir www
           npx cap add android
+
+      - name: Generate Custom App Icon
+        run: |
+          # Create an SVG icon with Rocky purple and a football theme
+          cat << 'EOF' > icon.svg
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+            <rect width="512" height="512" rx="115" fill="#4c1d95"/>
+            <circle cx="256" cy="256" r="210" fill="#581c87" stroke="#e2e8f0" stroke-width="12"/>
+            <path d="M140 256 C140 170 372 170 372 256 C372 342 140 342 140 256 Z" fill="#78350f" stroke="#e2e8f0" stroke-width="8"/>
+            <line x1="180" y1="256" x2="332" y2="256" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+            <line x1="216" y1="236" x2="216" y2="276" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+            <line x1="256" y1="232" x2="256" y2="280" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+            <line x1="296" y1="236" x2="296" y2="276" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+          </svg>
+          EOF
+
+          # Install sharp-cli to compile launcher PNGs across Android resolutions
+          npm install -g sharp-cli
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+
+          sharp -i icon.svg -o android/app/src/main/res/mipmap-mdpi/ic_launcher.png resize 48 48
+          sharp -i icon.svg -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png resize 72 72
+          sharp -i icon.svg -o android/app/src/main/res/mipmap-xhdpi/ic_launcher.png resize 96 96
+          sharp -i icon.svg -o android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png resize 144 144
+          sharp -i icon.svg -o android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png resize 192 192
+
+          # Duplicate into round launcher icons for Pixel launchers
+          cp android/app/src/main/res/mipmap-mdpi/ic_launcher.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          cp android/app/src/main/res/mipmap-xhdpi/ic_launcher.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          cp android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
 
       - name: Fix Kotlin Stdlib Duplicate Classes
         run: |
@@ -57,8 +93,12 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
 
+      - name: Rename APK Output
+        run: |
+          mv android/app/build/outputs/apk/debug/app-debug.apk android/app/build/outputs/apk/debug/RockySidelineReporter.apk
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SidelineReporter-Debug-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: RockySidelineReporter-APK
+          path: android/app/build/outputs/apk/debug/RockySidelineReporter.apk
