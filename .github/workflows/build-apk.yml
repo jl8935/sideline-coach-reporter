@@ -48,7 +48,6 @@ jobs:
           </svg>
           EOF
 
-          # Install sharp-cli to compile launcher PNGs across Android resolutions
           npm install -g sharp-cli
           mkdir -p android/app/src/main/res/mipmap-mdpi
           mkdir -p android/app/src/main/res/mipmap-hdpi
@@ -56,18 +55,34 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxhdpi
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
 
+          # Generate standard PNG icons
           sharp -i icon.svg -o android/app/src/main/res/mipmap-mdpi/ic_launcher.png resize 48 48
           sharp -i icon.svg -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png resize 72 72
           sharp -i icon.svg -o android/app/src/main/res/mipmap-xhdpi/ic_launcher.png resize 96 96
           sharp -i icon.svg -o android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png resize 144 144
           sharp -i icon.svg -o android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png resize 192 192
 
-          # Duplicate into round launcher icons for Pixel launchers
+          # Generate round PNG icons
           cp android/app/src/main/res/mipmap-mdpi/ic_launcher.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
           cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
           cp android/app/src/main/res/mipmap-xhdpi/ic_launcher.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
           cp android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
           cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+
+          # Generate foreground image for Android Adaptive Icons (required by Pixel launchers)
+          sharp -i icon.svg -o android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png resize 432 432
+
+          # Force adaptive icon XML to use our custom assets
+          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+          cat << 'EOF' > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:color="#4c1d95"/>
+              <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+          </adaptive-icon>
+          EOF
+
+          cp android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
 
       - name: Fix Kotlin Stdlib Duplicate Classes
         run: |
